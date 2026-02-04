@@ -1,90 +1,82 @@
-# twitter slackbot ETL job w/ sentiment analysis
-A Dockerized twitter slackbot that reposts tweets about the AllBlacks (NZ Rugby) from twitter to slack using MongoDB to interact with the Twitter API and a PostgreSQL database.
+# Twitter Sentiment Analysis → Slack Integration
 
-![image](https://user-images.githubusercontent.com/105222741/216148400-a96b278a-2a97-4796-b58c-cb05f5ae8d85.png)
+## Overview
+End-to-end data pipeline demonstrating **applied NLP for decision support** in operational workflows. Ingests public social media data, performs sentiment analysis, and delivers actionable signals to operational teams via Slack.
 
+**Key capabilities:** Real-time data ingestion, multi-database architecture, containerized deployment, human-in-the-loop design.
 
+## Architecture
+```
+Twitter API → MongoDB (raw storage) → PostgreSQL (processed data) 
+→ Sentiment Analysis → Slack (alerts + human review)
+```
 
-# To run:
-First create a new virtual environment.
-> conda create --name {your_env_name} python=3.8
+**Tech stack:** Python, MongoDB, PostgreSQL, Docker, Twitter API, Slack API, NLTK/TextBlob for sentiment analysis
 
-Clone this repository to your local directory.
-> git clone https://github.com/Nathan-Austin/twitter_slackbot_etljob.git
+**Design rationale:**
+- MongoDB for flexible ingestion of variable Twitter data structures
+- PostgreSQL for structured sentiment analysis results and audit trail
+- Docker for reproducible deployment across environments
+- Slack integration to embed signals directly into team workflows
 
-Install Docker and Docker dependencies such as Docker Desktop
-Go to the [Docker Documentation](https://docs.docker.com/), find the installation instructions and install Docker CE.
+## Governance and Responsible Data Use
+This project was designed with **practical data governance** applied to a real-world constraint environment:
 
-####Goto the cloned directory 
-In the Terminal run:
+**Data minimization:** Only public tweets processed; no long-term storage of personal identifiers beyond what was operationally necessary. User data retained only during active processing window.
 
-> nano .env
+**Bias awareness:** Sentiment models carry inherent biases (language, cultural context, sarcasm detection). System was designed to **surface signals, not make autonomous decisions** — human review was mandatory before action.
 
-This will create a new .env file and inside this you need to add your secret information:
+**Platform compliance:** Implemented rate limiting and error handling to respect Twitter API terms of service. System gracefully degraded when rate limits hit rather than circumventing controls.
 
-> BEARER_TOKEN = "your token here"   # this is from twitter, see below for more details
+**Transparency:** Sentiment scores were logged alongside raw text, enabling audit of classification decisions and downstream investigation of false positives/negatives.
 
-> WEBHOOK_URL =  "your token here"   # this is from slack, see below for more details
+## Monitoring and Operational Considerations
+**Data quality monitoring:**
+- API connection health checks and automatic retry logic
+- Detection of unusually low/high sentiment score distributions (signal of model drift or data quality issues)
+- Logging of failed API calls, parse errors, and processing exceptions
 
-> POSTGRES_USER = "your token here"
+**Noise reduction:**
+- Confidence thresholds to filter ambiguous sentiment classifications
+- Configurable alert criteria to prevent notification fatigue
+- Designed to be extended with additional validation layers or escalation rules
 
-> POSTGRES_PASSWORD=  "your token here"
+**Human-in-the-loop design:** System explicitly **does not auto-action** on sentiment results. Slack integration was for awareness and triage, not automated response.
 
+## Limitations and Context
+This repository represents a **proof-of-concept implementation** from 2023. Production systems I have designed and built since then include:
+- Row-level access controls and audit logging
+- Formal data retention and deletion policies
+- Stakeholder review processes for model changes
+- Incident response procedures for data quality failures
 
-### TWITTER API TOKEN
+These systems are not publicly available due to **security, compliance, and commercial sensitivity** requirements.
 
-Step 1: Get a Twitter Bearer Token
+## Use Cases for Human Rights / Nonprofit Context
+This architecture pattern is directly applicable to:
+- **Community safety monitoring:** Detecting coordinated harassment or threats in public discourse
+- **Program evaluation:** Understanding sentiment around policy interventions or advocacy campaigns
+- **Early warning systems:** Identifying emerging risks or narratives requiring response
+- **Resource allocation:** Prioritizing support based on community-expressed needs
 
-2: Register your application on apps.twitter.com.
+**Critical consideration:** In human rights contexts, false positives and negatives have higher stakes. Any similar system would require **enhanced human oversight, appeal mechanisms, and continuous evaluation for bias** against vulnerable populations.
 
-3: Navigate to the Twitter App dashboard and open the Twitter App for which you would like to generate access tokens.
+## Installation & Usage
+```bash
+# Clone repository
+git clone https://github.com/Nathan-Austin/twitter_slackbot_with-sentiment_analysis.git
 
-4: Navigate to the “keys and tokens” page.
+# Set up environment variables
+# Create .env file with:
+# TWITTER_API_KEY=your_key
+# TWITTER_API_SECRET=your_secret
+# SLACK_WEBHOOK_URL=your_webhook
+# MONGODB_URI=your_mongodb_connection
+# POSTGRES_URI=your_postgres_connection
 
-5: You’ll find the API keys, user Access Tokens, and Bearer Token on this page.
+# Run with Docker
+docker-compose up --build
+```
 
-6: Write down the Bearer Token
-
-
-### SLACK WEBHOOK_URL
-
-
-To build a Slack Bot, you need to:
-
-Login and go to [Your Apps](https://api.slack.com/apps)
-
-Choose Create New App
-
-Choose the option From scratch
-
-Fill in a name and choose your slack workspace as Development Slack Workspace
-
-Press Create App
-
-Under Add features and functionality click on Incoming Webhooks
-
-Activate incoming webhooks by clicking on the switch
-
-Click on Add new webhook to the workspace at the bottom of the page
-
-Select a channel where you want to post messages and click on Allow
-
-Scroll down and copy the Webohook URL into the code:
-  
-
-### In the terminal run:
-
-> docker-compose build
-
-> docker-compose up
-
-This will start the container. 
-
-It is currently set to repost a randomly selected tweet every 60 seconds. You can change thi time by adjusting the sleep time at the 
-bottom of each .py file.
-You can remove the limit &/or random in the sql query in the slack.py file.
-You can also adjust the content in the get_tweets.py file byt changing the username form 'allblacks' ( the NZ natioanl rugby team).
-
-
-
-
+## License
+MIT License
